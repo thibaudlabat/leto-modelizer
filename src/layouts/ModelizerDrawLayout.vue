@@ -19,6 +19,7 @@
     <git-authentication-dialog :project-name="projectName" />
     <git-add-remote-dialog :project-name="projectName" />
   </q-layout>
+  <e-l-k-playground :plugin="data"/>
 </template>
 
 <script setup>
@@ -41,6 +42,7 @@ import { useRoute } from 'vue-router';
 import { Notify } from 'quasar';
 import GitAuthenticationDialog from 'components/dialog/GitAuthenticationDialog.vue';
 import GitAddRemoteDialog from 'components/dialog/GitAddRemoteDialog.vue';
+import ELKPlayground from "src/ELK/ELKPlayground.vue";
 
 const { t } = useI18n();
 const route = useRoute();
