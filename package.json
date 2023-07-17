@@ -23,6 +23,7 @@
     "axios": "=1.4.0",
     "browserfs": "=1.4.3",
     "core-js": "=3.31.1",
+    "githubator-plugin": "github:ditrit/githubator-plugin#0.2.1",
     "isomorphic-git": "=1.24.3",
     "leto-modelizer-plugin-core": "github:ditrit/leto-modelizer-plugin-core#0.17.0",
     "monaco-editor": "=0.40.0",
