@@ -7,3 +7,5 @@
 .eslintrc.js
 babel.config.js
 /src/plugins/index.js
+*
+**/*

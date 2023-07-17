@@ -50,7 +50,7 @@ const removeAttribute = (node) => {
 
 module.exports = configure((ctx) => ({
   // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
-  supportTS: false,
+  supportTS: true,
 
   // https://v2.quasar.dev/quasar-cli-webpack/prefetch-feature
   // preFetch: true,
