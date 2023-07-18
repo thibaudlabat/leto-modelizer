@@ -6,6 +6,7 @@
   "exports": "./dist/githubator-plugin.js",
   "scripts": {
     "build": "webpack",
+    "build:watch": "webpack --watch",
     "generate:parser": "node scripts/generate_parser.js",
     "lint": "eslint --max-warnings=0 --ext .js src",
     "lint:fix": "eslint --max-warnings=0 --fix --ext .js src",

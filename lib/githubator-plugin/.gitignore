@@ -290,4 +290,4 @@ test-report.xml
 
 
 # perso
-dist/*.js
+dist/*
