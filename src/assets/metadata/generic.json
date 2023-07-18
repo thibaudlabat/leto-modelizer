@@ -1,0 +1,126 @@
+{
+  "workflow": {
+    "type": "workflow",
+    "model": "workflow",
+    "icon": "DefaultWorkflow",
+    "displayName": "Workflow",
+    "description": "A workflow is a configurable automated process that will run one or more jobs.<br/><br/>Workflows are defined by a YAML file checked in to your repository and will run when triggered by an event in your repository, or they can be triggered manually, or at a defined schedule.",
+    "url": "https://docs.github.com/en/actions/using-workflows/about-workflows",
+    "childrenTypes": [
+      "trigger",
+      "job"
+    ],
+    "isContainer": true,
+    "available": true,
+    "attributes": [
+      {
+        "name": "name",
+        "type": "String",
+        "required": true,
+        "description": "The name of the workflow as it will appear in the \"Actions\" tab of the GitHub repository.",
+        "url": "https://docs.github.com/en/actions/using-workflows/about-workflows#understanding-the-workflow-file"
+      }
+    ]
+  },
+  "trigger": {
+    "type": "trigger",
+    "model": "trigger",
+    "icon": "DefaultTrigger",
+    "available": false,
+    "parentTypes": [
+      "workflow"
+    ],
+    "attributes": [
+      {
+        "name": "workflow_id",
+        "displayName": "Id of workflow",
+        "type": "Reference",
+        "containerRef": "workflow",
+        "required": true
+      }
+    ]
+  },
+  "job": {
+    "type": "job",
+    "model": "job",
+    "displayName": "Job",
+    "description": "A workflow run is made up of one or more jobs, which run in parallel by default.",
+    "url": "https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow",
+    "icon": "DefaultJob",
+    "available": true,
+    "parentTypes": [
+      "workflow"
+    ],
+    "childrenTypes": [
+      "step"
+    ],
+    "isContainer": true,
+    "displayType": "workflow",
+    "preventChildrenMovement": true,
+    "childrenPerLine": 10,
+    "attributes": [
+      {
+        "name": "workflow_id",
+        "displayName": "Id of workflow",
+        "type": "Reference",
+        "containerRef": "workflow",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "description": "The name of the job as it will appear in the \"Actions\" tab of the GitHub repository.",
+        "url": "https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow#setting-a-name-for-a-job"
+      },
+      {
+        "name": "runs-on",
+        "type": "String",
+        "displayName": "Type of runner",
+        "description": "The type of machine to run the job on.",
+        "url": "https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idruns-on"
+      },
+      {
+        "name": "needs",
+        "displayName": "Previous job(s)",
+        "description": "Identify any jobs that must complete successfully before this job will run",
+        "url": "https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow#defining-prerequisite-jobs",
+        "type": "Link",
+        "linkType": "Reverse",
+        "linkRef": "job"
+      }
+    ]
+  },
+  "step": {
+    "type": "step",
+    "model": "step",
+    "icon": "DefaultStep",
+    "available": false,
+    "parentTypes": [
+      "job"
+    ],
+    "description": "Task of the job. Step can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.",
+    "url": "https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps",
+    "attributes": [
+      {
+        "name": "job_id",
+        "displayName": "Id of job",
+        "type": "Reference",
+        "containerRef": "job",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "description": "The name of the step as it will appear in the \"Actions\" tab of the GitHub repository.",
+        "url": "https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow#setting-a-name-for-a-job"
+      },
+      {
+        "name": "env",
+        "type": "Object",
+        "displayName": "Environment variables",
+        "description": "Variables for steps to use in the runner environment.",
+        "url": "https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsenv"
+      }
+    ]
+  }
+}
