@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "webpack",
+    "build:watch": "webpack --watch",
     "build:docs": "jsdoc --readme README.md --package package.json -r ./src/ -c jsdoc.config.json -d docs",
     "prepare:docs": "sed -i 's#taffydb#@jsdoc/salty#g' node_modules/better-docs/publish.js",
     "demo": "npm --prefix ./demo install && npm --prefix ./demo run demo",

@@ -287,3 +287,5 @@ eslint.json
 
 reports/
 test-report.xml
+
+dist/*
