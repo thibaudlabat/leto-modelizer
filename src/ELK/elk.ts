@@ -1,6 +1,6 @@
-import ELK, {ElkNode} from 'elkjs'
+import ELK, {ElkEdgeSection, ElkExtendedEdge, ElkNode} from 'elkjs'
 import {Component, ComponentLink, DefaultPlugin} from "leto-modelizer-plugin-core";
-import d3 from 'd3';
+
 /*
 Required packages:
 
@@ -32,6 +32,28 @@ interface ELKParams
     'interactiveReferencePoint': string//'TOP_LEFT',
     'direction': string//'UNDEFINED'
 }
+
+function save_edges_for_drawing(plugin: DefaultPlugin,layout:ElkNode)
+{
+    /*
+    On rend le résultat de ELK accessible aux fonctions de dessin des arêtes.
+     */
+
+    // monkey patching
+
+    if(plugin.data.__elkEdges === undefined)
+        plugin.data.__elkEdges = new Map<string, ElkEdgeSection>();
+
+    const map = plugin.data.__elkEdges
+
+    for(const edge of layout.edges)
+    {
+        const source = edge.sources[0];
+        const target = edge.targets[0];
+        map.set(source+'__'+target, edge.sections[0]);
+    }
+}
+
 export async function render_graph(plugin: DefaultPlugin, params:ELKParams) {
     const components = plugin.data.components;
     const links = plugin.data.getLinks();
@@ -52,6 +74,9 @@ export async function render_graph(plugin: DefaultPlugin, params:ELKParams) {
         const node = hierarchicalRender.pop() as NodeData;
 
         const layout: ElkNode = await get_elk_layout_for_children(nodes_map, links, node, params);
+
+        save_edges_for_drawing(plugin,layout);
+
         renderedLayouts.push({depth:node.depth,layout});
         draw_layout(plugin, layout);
     }
