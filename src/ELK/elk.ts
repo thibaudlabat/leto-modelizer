@@ -44,13 +44,23 @@ function save_edges_for_drawing(plugin: DefaultPlugin,layout:ElkNode)
     if(plugin.data.__elkEdges === undefined)
         plugin.data.__elkEdges = new Map<string, ElkEdgeSection>();
 
+    if(plugin.data.__elkNodesEdgesMap === undefined)
+        plugin.data.__elkNodesEdgesMap = new Map<string, string[]>();
+
     const map = plugin.data.__elkEdges
+    const nodesEdgesMap = plugin.data.__elkNodesEdgesMap;
 
     for(const edge of layout.edges)
     {
         const source = edge.sources[0];
         const target = edge.targets[0];
-        map.set(source+'__'+target, edge.sections[0]);
+        const edgeName = source+'__'+target;
+        map.set(edgeName, edge.sections[0]);
+
+        if(!nodesEdgesMap.has(source)) nodesEdgesMap.set(source,[]);
+        if(!nodesEdgesMap.has(target)) nodesEdgesMap.set(target,[]);
+        nodesEdgesMap.get(source).push(edgeName);
+        nodesEdgesMap.get(target).push(edgeName);
     }
 }
 
