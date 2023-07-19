@@ -100,7 +100,7 @@ const separateConnectedCheckbox = ref(true)
 
 const cycleBreaking = ref("INTERACTIVE")
 const layering = ref("INTERACTIVE")
-const crossingMinimization = ref("INTERACTIVE")
+const crossingMinimization = ref("LAYER_SWEEP")
 const nodePlacement = ref("INTERACTIVE")
 const interactiveReferencePoint = ref("TOP_LEFT")
 const direction = ref("UNDEFINED")
