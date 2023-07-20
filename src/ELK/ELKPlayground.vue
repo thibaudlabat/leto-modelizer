@@ -101,7 +101,7 @@ const separateConnectedCheckbox = ref(true)
 const cycleBreaking = ref("INTERACTIVE")
 const layering = ref("INTERACTIVE")
 const crossingMinimization = ref("LAYER_SWEEP")
-const nodePlacement = ref("INTERACTIVE")
+const nodePlacement = ref("BRANDES_KOEPF")
 const interactiveReferencePoint = ref("TOP_LEFT")
 const direction = ref("UNDEFINED")
 
