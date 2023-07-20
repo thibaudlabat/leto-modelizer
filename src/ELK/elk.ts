@@ -70,10 +70,7 @@ export async function render_graph(plugin: DefaultPlugin, params:ELKParams) {
     console.log("ELK parameters",params)
     console.log("Noeuds et liens", {components, links})
 
-    const {nodes_map, hierarchicalRender}: {
-        nodes_map: NodeMap,
-        hierarchicalRender: NodeData[]
-    } = await elk_layout(components);
+    const {nodes_ignored, nodes_map, hierarchicalRender} = await elk_layout(components);
 
     // on vide le tableau (en gardant l'objet car exporté)
     while(renderedLayouts.length!=0)
@@ -83,7 +80,7 @@ export async function render_graph(plugin: DefaultPlugin, params:ELKParams) {
 
         const node = hierarchicalRender.pop() as NodeData;
 
-        const layout: ElkNode = await get_elk_layout_for_children(nodes_map, links, node, params);
+        const layout: ElkNode = await get_elk_layout_for_children(nodes_ignored, nodes_map, links, node, params);
 
         save_edges_for_drawing(plugin,layout);
 
@@ -106,14 +103,23 @@ function climb_to_depth(initialNode: NodeData, depth: number): NodeData | null {
 }
 
 
-function get_links_for_children(nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData) {
+function get_links_for_children(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData) {
     const kept_ids = new Set(parentNode.children.map(c => c.raw?.id));
 
     const depth = parentNode.depth + 1;
     const links = all_links
         .map((link) => {
+
+            if(nodes_ignored.has(link.source) || nodes_ignored.has(link.target))
+            {
+                // noeud ignoré
+                return null;
+            }
+
             const source = nodes_map.get(link.source as unknown as string);
             const target = nodes_map.get(link.target as unknown as string);
+
+
             if(source==undefined || target==undefined)
             {
                 console.error({error:"source or target undefined",names:[link.source,link.target], link,source,target})
@@ -131,7 +137,7 @@ function get_links_for_children(nodes_map: NodeMap, all_links: ComponentLink[], 
     return links.map(t => [t[0].raw.id, t[1].raw.id]);
 }
 
-async function get_elk_layout_for_children(nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData, params: ELKParams) {
+async function get_elk_layout_for_children(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData, params: ELKParams) {
 
     const layoutOptions = {'elk.algorithm': 'elk.layered',
         'spacing.baseValue': '50',
@@ -165,7 +171,7 @@ async function get_elk_layout_for_children(nodes_map: NodeMap, all_links: Compon
         }))
 
 
-    const links = get_links_for_children(nodes_map, all_links, parentNode);
+    const links = get_links_for_children(nodes_ignored, nodes_map, all_links, parentNode);
     graph.edges = links.map(link => ({
         id: link[0] + "__" + link[1],
         sources: [link[0]],
@@ -192,14 +198,28 @@ function draw_layout(plugin: DefaultPlugin, layout: ElkNode) {
 }
 
 async function elk_layout(components: Component[]): Promise<{
+    nodes_ignored: Set<string>;
     hierarchicalRender: NodeData[];
     nodes_map: NodeMap
 }> {
 
-    const nodes_map = new Map(components.map(c => [c.id, {
-        raw: c, children: [], parent: null, depth: 0
-    }]));
+    const nodes_map: NodeMap = new Map<string,NodeData>();
+    const nodes_ignored = new Set<string>();
     const nodes: NodeData[] = Array.from(nodes_map.values())
+
+    for(const c of components)
+    {
+        if(c.__ignored) // noeud ignoré
+        {
+            nodes_ignored.add(c.id);
+            continue;
+        }
+
+        const e = {raw: c, children: [], parent: null, depth: 0};
+        nodes_map.set(c.id,e);
+        nodes.push(e);
+    }
+
 
     /* Pour chaque noeud, on calcule les parents et les enfants */
     function findParentId(node: NodeData): string {
@@ -262,5 +282,5 @@ async function elk_layout(components: Component[]): Promise<{
     }
 
 
-    return {nodes_map, hierarchicalRender: hierarchicalRender.reverse()};
+    return {nodes_ignored, nodes_map, hierarchicalRender: hierarchicalRender.reverse()};
 }
