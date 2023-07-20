@@ -285,8 +285,31 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
                 origNodeMap.set(node.id, node);
             }
 
+            const origEdgeMap = new Map<string, any>();
+            for (const edge of orig.edges) {
+                origEdgeMap.set(edge.id, edge);
+            }
+
             // distance des noeuds entre eux
             let score1 = 0;
+            let score1_i = 0
+            for (const e of candidate.edges) {
+                if(origEdgeMap.has(e.id))
+                {
+                    const {s1,e1} = e.sections.map(({startPoint,endPoint})=>({s1:startPoint,e1:endPoint}))[0];
+                    const dCandid2 = Math.pow(s1.x - e1.x, 2) + Math.pow(s1.y - e1.y, 2);
+
+                    const {s2,e2} = origEdgeMap.get(e.id).sections.map(({startPoint,endPoint})=>({s2:startPoint,e2:endPoint}))[0];
+                    const dOrig2=  Math.pow(s2.x - e2.x, 2) + Math.pow(s2.y - e2.y, 2);
+
+                    const dDiff = Math.abs(dCandid2 - dOrig2);
+                    score1 += dDiff;
+                    score1_i++;
+                }
+            }
+            if(score1_i !=0 )
+                score1 /= score1_i;
+            /*
             for (const n1 of candidate.children) {
                 for (const n2 of candidate.children) {
                     if (n1 != n2 && origNodeMap.has(n1.id) && origNodeMap.has(n2.id)) {
@@ -299,7 +322,7 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
                     }
                 }
             }
-            score1 /= Math.pow(orig.children.length, 2)
+            score1 /= Math.pow(orig.children.length, 2)*/
 
             // distance des connexions des noeuds nouvellement placés
             let score2 = 0;
