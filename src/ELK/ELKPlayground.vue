@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import {AutoLayout} from './elk';
-import {ref} from "vue";
+import {ref, onMounted} from "vue";
 import FloatingPanel from "./FloatingPanel.vue";
 
 
@@ -107,6 +107,7 @@ const direction = ref("UNDEFINED")
 
 // DEBUG
 import * as d3 from 'd3';
+import PluginEvent from "../composables/events/PluginEvent";
 // @ts-ignore
 window.d3 = d3;
 /*
@@ -119,7 +120,7 @@ d3.select("#root svg").selectAll("g .component").on("click", (evt,data,c) => d3.
 
 
  */
-const layout = new AutoLayout(props.plugin.plugin);
+
 async function buttonClick_layoutAuto()
 {
   const params = {
@@ -132,13 +133,16 @@ async function buttonClick_layoutAuto()
     interactiveReferencePoint: interactiveReferencePoint.value,
     direction: direction.value
   };
-  await layout.renderGraph(params)
+  const layouts = await layout.generateLayouts(params)
+  layout.drawLayouts(layouts);
   props.plugin.plugin.draw('root', false);
 }
 function buttonClick_showELKLayout()
 {
   console.log(layout.renderedLayouts)
 }
+
+let layout = new AutoLayout( ()=>props.plugin.plugin );
 
 
 </script>

@@ -33,17 +33,47 @@ interface ELKParams {
 }
 
 export class AutoLayout {
-    plugin: DefaultPlugin;
+    plugin: ()=>DefaultPlugin;
     renderedLayouts: any[];
 
-    constructor(plugin: DefaultPlugin) {
+    constructor(plugin: ()=>DefaultPlugin) {
         this.plugin = plugin;
         this.renderedLayouts = [];
     }
 
-    async elkLayout(components: Component[]): Promise<{
-        nodes_ignored: Set<string>; hierarchicalRender: NodeData[]; nodes_map: NodeMap
-    }> {
+    private saveEdgesForDrawing(layout: ElkNode) {
+        /*
+        On rend le résultat de ELK accessible aux fonctions de dessin des arêtes.
+         */
+
+        // monkey patching
+
+        if (this.plugin().data.__elkEdges === undefined) this.plugin().data.__elkEdges = new Map<string, ElkEdgeSection>();
+
+        if (this.plugin().data.__elkNodesEdgesMap === undefined) this.plugin().data.__elkNodesEdgesMap = new Map<string, string[]>();
+
+        const map = this.plugin().data.__elkEdges
+        const nodesEdgesMap = this.plugin().data.__elkNodesEdgesMap;
+
+        for (const edge of layout.edges) {
+            const source = edge.sources[0];
+            const target = edge.targets[0];
+            const edgeName = source + '__' + target;
+            map.set(edgeName, edge.sections[0]);
+
+            if (!nodesEdgesMap.has(source)) nodesEdgesMap.set(source, []);
+            if (!nodesEdgesMap.has(target)) nodesEdgesMap.set(target, []);
+            nodesEdgesMap.get(source).push(edgeName);
+            nodesEdgesMap.get(target).push(edgeName);
+        }
+    }
+
+    async generateLayouts(params: ELKParams) {
+        const components = this.plugin().data.components;
+        const links = this.plugin().data.getLinks();
+        console.log("ELK parameters", params)
+        console.log("Noeuds et liens", {components, links})
+
 
         const nodes_map: NodeMap = new Map<string, NodeData>();
         const nodes_ignored = new Set<string>();
@@ -106,7 +136,7 @@ export class AutoLayout {
 
         /* rendu hiérarchique : liste des noeuds */
 
-        const hierarchicalRender: NodeData[] = [];
+        let hierarchicalRender: NodeData[] = [];
 
         for (let depth = maxDepth; depth !== 0; depth--) {
             // on prend les parents des noeuds de ce niveau
@@ -121,47 +151,9 @@ export class AutoLayout {
             }
         }
 
+        hierarchicalRender = hierarchicalRender.reverse()
 
-        return {nodes_ignored, nodes_map, hierarchicalRender: hierarchicalRender.reverse()};
-    }
-
-    saveEdgesForDrawing(layout: ElkNode) {
-        /*
-        On rend le résultat de ELK accessible aux fonctions de dessin des arêtes.
-         */
-
-        // monkey patching
-
-        if (this.plugin.data.__elkEdges === undefined) this.plugin.data.__elkEdges = new Map<string, ElkEdgeSection>();
-
-        if (this.plugin.data.__elkNodesEdgesMap === undefined) this.plugin.data.__elkNodesEdgesMap = new Map<string, string[]>();
-
-        const map = this.plugin.data.__elkEdges
-        const nodesEdgesMap = this.plugin.data.__elkNodesEdgesMap;
-
-        for (const edge of layout.edges) {
-            const source = edge.sources[0];
-            const target = edge.targets[0];
-            const edgeName = source + '__' + target;
-            map.set(edgeName, edge.sections[0]);
-
-            if (!nodesEdgesMap.has(source)) nodesEdgesMap.set(source, []);
-            if (!nodesEdgesMap.has(target)) nodesEdgesMap.set(target, []);
-            nodesEdgesMap.get(source).push(edgeName);
-            nodesEdgesMap.get(target).push(edgeName);
-        }
-    }
-
-    async renderGraph(params: ELKParams) {
-        const components = this.plugin.data.components;
-        const links = this.plugin.data.getLinks();
-        console.log("ELK parameters", params)
-        console.log("Noeuds et liens", {components, links})
-
-        const {nodes_ignored, nodes_map, hierarchicalRender} = await this.elkLayout(components);
-
-        // on vide le tableau (en gardant l'objet car exporté)
-        while (this.renderedLayouts.length != 0) this.renderedLayouts.pop();
+        this.renderedLayouts = []
 
         while (hierarchicalRender.length !== 0) {
 
@@ -172,11 +164,12 @@ export class AutoLayout {
             this.saveEdgesForDrawing(layout);
 
             this.renderedLayouts.push({depth: node.depth, layout});
-            this.drawLayout(layout);
         }
+        return this.renderedLayouts.map(({layout})=>layout);
     }
 
-    climbToDepth(initialNode: NodeData, depth: number): NodeData | null {
+
+    private climbToDepth(initialNode: NodeData, depth: number): NodeData | null {
 
         let node = initialNode;
         if (node.depth < depth) return null;
@@ -187,7 +180,7 @@ export class AutoLayout {
         return node;
     }
 
-    getLinksForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData) {
+    private getLinksForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData) {
         const kept_ids = new Set(parentNode.children.map(c => c.raw?.id));
 
         const depth = parentNode.depth + 1;
@@ -221,7 +214,7 @@ export class AutoLayout {
         return links.map(t => [t[0].raw.id, t[1].raw.id]);
     }
 
-    async getElkLayoutForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData, params: ELKParams) {
+    private async getElkLayoutForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData, params: ELKParams) {
 
         const layoutOptions = {
             'elk.algorithm': 'elk.layered', 'spacing.baseValue': '50', /*'spacing.nodeNode': '100',*/
@@ -257,14 +250,19 @@ export class AutoLayout {
         return await elk.layout(graph);
     }
 
+
+    drawLayouts(layouts: ElkNode[]){
+        for(const layout of layouts)
+            this.drawLayout(layout);
+    }
     drawLayout(layout: ElkNode) {
 
         const nodes: Map<string, { x: number, y: number }> = new Map(layout.children.map(e => [e.id, {
             x: e.x, y: e.y
         }]));
         const scale = 1;
-        for (let i in this.plugin.data.components) {
-            let comp = this.plugin.data.components[i];
+        for (let i in this.plugin().data.components) {
+            let comp = this.plugin().data.components[i];
             if (nodes.has(comp.id)) {
                 const coord = nodes.get(comp.id)
 
