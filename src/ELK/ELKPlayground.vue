@@ -74,7 +74,8 @@
 
     <hr/>
     <h5 style="margin: 0 0 5px;">Auto node placement</h5>
-
+    <label for="direction">iterations</label> <input id="iterations" type="number" v-model="placementAutoN"/><br/>
+    <button @click="buttonClick_placementAutoNoeuds()">Replacer automatiquement les noeuds ignorés</button><br/>
 
   </floating-panel>
 
@@ -104,6 +105,7 @@ const crossingMinimization = ref("LAYER_SWEEP")
 const nodePlacement = ref("BRANDES_KOEPF")
 const interactiveReferencePoint = ref("TOP_LEFT")
 const direction = ref("UNDEFINED")
+const placementAutoN = ref(5)
 
 // DEBUG
 import * as d3 from 'd3';
@@ -121,9 +123,9 @@ d3.select("#root svg").selectAll("g .component").on("click", (evt,data,c) => d3.
 
  */
 
-async function buttonClick_layoutAuto()
+function getElkUserParams()
 {
-  const params = {
+  return {
     interactive: interactiveCheckbox.value,
     separateConnectedComponents: separateConnectedCheckbox.value,
     cycleBreaking: cycleBreaking.value,
@@ -133,7 +135,19 @@ async function buttonClick_layoutAuto()
     interactiveReferencePoint: interactiveReferencePoint.value,
     direction: direction.value
   };
-  const layouts = await layout.generateLayouts(params)
+}
+async function buttonClick_layoutAuto()
+{
+
+  const layouts = await layout.generateLayouts(getElkUserParams())
+  layout.drawLayouts(layouts);
+  props.plugin.plugin.draw('root', false);
+}
+
+async function buttonClick_placementAutoNoeuds()
+{
+  const [layouts,score] = await layout.replacementAuto(getElkUserParams(),placementAutoN)
+  console.log("score",score);
   layout.drawLayouts(layouts);
   props.plugin.plugin.draw('root', false);
 }
