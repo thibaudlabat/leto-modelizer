@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import {render_graph, renderedLayouts} from './elk';
+import {AutoLayout} from './elk';
 import {ref} from "vue";
 import FloatingPanel from "./FloatingPanel.vue";
 
@@ -119,7 +119,7 @@ d3.select("#root svg").selectAll("g .component").on("click", (evt,data,c) => d3.
 
 
  */
-
+const layout = new AutoLayout(props.plugin.plugin);
 async function buttonClick_layoutAuto()
 {
   const params = {
@@ -132,12 +132,12 @@ async function buttonClick_layoutAuto()
     interactiveReferencePoint: interactiveReferencePoint.value,
     direction: direction.value
   };
-  await render_graph(props.plugin.plugin, params)
+  await layout.renderGraph(params)
   props.plugin.plugin.draw('root', false);
 }
 function buttonClick_showELKLayout()
 {
-  console.log(renderedLayouts)
+  console.log(layout.renderedLayouts)
 }
 
 
