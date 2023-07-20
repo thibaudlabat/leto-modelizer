@@ -278,34 +278,52 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
 
 
     async replacementAuto(params,N:number = 5) {
+        function one_layout_distance(orig, candidate): number {
 
-        function one_layout_distance(orig,candidate):number{
-            let s = 0;
-            const r =  Math.random();
-
-            const candidNodeMap = new Map<string,any>();
-            for(const node of candidate.children)
-            {
-                candidNodeMap.set(node.id,node);
+            const origNodeMap = new Map<string, any>();
+            for (const node of orig.children) {
+                origNodeMap.set(node.id, node);
             }
 
-            for(const n1 of orig.children)
-            {
-                for(const n2 of orig.children)
-                {
-                    if(n1!=n2)
-                    {
-                        const dOrig2 = Math.pow(n1.x-n2.x,2) + Math.pow(n1.y-n2.y,2);
+            // distance des noeuds entre eux
+            let score1 = 0;
+            for (const n1 of candidate.children) {
+                for (const n2 of candidate.children) {
+                    if (n1 != n2 && origNodeMap.has(n1.id) && origNodeMap.has(n2.id)) {
+                        const dCandid2 = Math.pow(n1.x - n2.x, 2) + Math.pow(n1.y - n2.y, 2);
 
-                        const m1 = candidNodeMap.get(n1.id);
-                        const m2 = candidNodeMap.get(n2.id);
-                        const dCandid2 =  Math.pow(m1.x-m2.x,2) + Math.pow(m1.y-m2.y,2);
-                        s += Math.sqrt(Math.abs(dOrig2-dCandid2));
+                        const m1 = origNodeMap.get(n1.id);
+                        const m2 = origNodeMap.get(n2.id);
+                        const dOrig2 = Math.pow(m1.x - m2.x, 2) + Math.pow(m1.y - m2.y, 2);
+                        score1 += Math.abs(dOrig2 - dCandid2);
                     }
                 }
             }
-            console.log({r,orig,candidate})
-            return r;
+            score1 /= Math.pow(orig.children.length, 2)
+
+            // distance des connexions des noeuds nouvellement placés
+            let score2 = 0;
+            let score2_i = 0
+            const newNodes = new Set(candidate.children.filter(n=>!origNodeMap.has(n.id)).map(n=>n.id))
+            for (const e of candidate.edges) {
+              const source = e.sources[0];
+              const target = e.targets[0];
+              if(newNodes.has(source) || newNodes.has(target))
+              {
+                  const {startPoint,endPoint} = e.sections[0];
+                  const d = Math.pow(startPoint.x - endPoint.x, 2) + Math.pow(startPoint.y - endPoint.y, 2)
+                  score2 += d;
+                  score2_i++;
+              }
+            }
+            if(score2_i !=0 )
+                score2 /= score2_i;
+
+            const score = score1 + score2;
+
+            console.log({score:Math.round(score),score1:Math.round(score1),score2:Math.round(score2), orig, candidate})
+
+            return score;
         }
 
         function layoutsDistance(orig, candidate): number {

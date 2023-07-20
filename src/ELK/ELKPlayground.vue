@@ -105,7 +105,7 @@ const crossingMinimization = ref("LAYER_SWEEP")
 const nodePlacement = ref("BRANDES_KOEPF")
 const interactiveReferencePoint = ref("TOP_LEFT")
 const direction = ref("UNDEFINED")
-const placementAutoN = ref(5)
+const placementAutoN = ref("5")
 
 // DEBUG
 import * as d3 from 'd3';
@@ -146,7 +146,7 @@ async function buttonClick_layoutAuto()
 
 async function buttonClick_placementAutoNoeuds()
 {
-  const [layouts,score] = await layout.replacementAuto(getElkUserParams(),placementAutoN)
+  const [layouts,score] = await layout.replacementAuto(getElkUserParams(),parseInt(placementAutoN.value,10))
   console.log("score",score);
   layout.drawLayouts(layouts);
   props.plugin.plugin.draw('root', false);
