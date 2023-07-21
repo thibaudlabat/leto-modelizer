@@ -1,5 +1,4 @@
 import ELK, {ElkEdgeSection, ElkNode} from 'elkjs'
-import {Component, ComponentLink, DefaultPlugin} from "leto-modelizer-plugin-core";
 
 /*
 Required packages:
@@ -8,14 +7,6 @@ npm i elkjs web-worker d3
 
  */
 
-interface NodeData {
-    parent: NodeData
-    raw: Component | null
-    children: NodeData[]
-    depth: number
-}
-
-type NodeMap = Map<string, NodeData>;
 
 
 const elk = new ELK()
@@ -33,10 +24,10 @@ interface ELKParams {
 }
 
 export class AutoLayout {
-    plugin: ()=>DefaultPlugin;
+    plugin: ()=>DefaultPluginType;
     renderedLayouts: any[];
 
-    constructor(plugin: ()=>DefaultPlugin) {
+    constructor(plugin: ()=>DefaultPluginType) {
         this.plugin = plugin;
         this.renderedLayouts = [];
     }
@@ -70,7 +61,10 @@ export class AutoLayout {
     }
 
     private getComponentsAndLinks() {
-        return {components: this.plugin().data.components, links: this.plugin().data.getLinks()}
+        return {
+            components: this.plugin().data.components,
+            links: this.plugin().data.getLinks()
+        }
     }
 
     private getNodes(components,ignoreIgnored=false)
@@ -214,7 +208,7 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
         return node;
     }
 
-    private getLinksForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLink[], parentNode: NodeData) {
+    private getLinksForChildren(nodes_ignored: Set<string>, nodes_map: NodeMap, all_links: ComponentLinkType[], parentNode: NodeData) {
         const kept_ids = new Set(parentNode.children.map(c => c.raw?.id));
 
         const depth = parentNode.depth + 1;
@@ -280,7 +274,7 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
     async replacementAuto(params,N:number = 5) {
         function one_layout_distance(orig, candidate) {
 
-            const origNodeMap = new Map<string, any>();
+            const origNodeMap = new Map<string, ComponentType>();
             for (const node of orig.children) {
                 origNodeMap.set(node.id, node);
             }
