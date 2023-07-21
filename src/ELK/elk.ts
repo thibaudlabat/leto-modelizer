@@ -1,31 +1,13 @@
 import ELK, {ElkEdgeSection, ElkNode} from 'elkjs'
-
-/*
-Required packages:
-
-npm i elkjs web-worker d3
-
- */
-
-
+import {ComponentType, DefaultPluginType, ComponentLinkType} from "./ExternalTypes";
+import {ELKParams, NodeData, NodeMap} from "./InternalTypes";
 
 const elk = new ELK()
 
 
-interface ELKParams {
-    separateConnectedComponents: boolean;
-    interactive: boolean
-    "cycleBreaking": string//"INTERACTIVE",
-    "layering": string//"INTERACTIVE",
-    'crossingMinimization': string//'INTERACTIVE',
-    'nodePlacement': string//'INTERACTIVE',
-    'interactiveReferencePoint': string//'TOP_LEFT',
-    'direction': string//'UNDEFINED'
-}
-
 export class AutoLayout {
     plugin: ()=>DefaultPluginType;
-    renderedLayouts: any[];
+    renderedLayouts: ElkNode[];
 
     constructor(plugin: ()=>DefaultPluginType) {
         this.plugin = plugin;
@@ -60,14 +42,18 @@ export class AutoLayout {
         }
     }
 
-    private getComponentsAndLinks() {
+    private getComponentsAndLinks():{components:ComponentType[],links:ComponentLinkType[]} {
         return {
             components: this.plugin().data.components,
             links: this.plugin().data.getLinks()
         }
     }
 
-    private getNodes(components,ignoreIgnored=false)
+    private getNodes(components: ComponentType[],ignoreIgnored=false):{
+        nodes_map: Map<string, NodeData>,
+        nodes : NodeData[],
+        nodes_ignored : Set<string> // nodes id
+    }
     {
 
         const nodes_map: NodeMap = new Map<string, NodeData>();
@@ -77,7 +63,7 @@ export class AutoLayout {
         for (const c of components) {
             if(!ignoreIgnored&&c.__ignored)
                 nodes_ignored.add(c.id);
-            const e = {raw: c, children: [], parent: null, depth: 0};
+            const e: NodeData = {raw: c, children: [], parent: null, depth: 0};
             nodes_map.set(c.id, e);
             nodes.push(e);
         }
@@ -98,7 +84,7 @@ export class AutoLayout {
         }
 
         /* on définit une racine */
-        const root = {raw: null, children: [], parent: null, depth: 0};
+        const root:NodeData = {raw: null, children: [], parent: null, depth: 0};
         for (const node of nodes) {
             if (!node.parent) {
                 node.parent = root

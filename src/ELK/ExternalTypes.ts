@@ -40,7 +40,7 @@ export interface DefaultDataType
     __elkEdges? : Map<string, ElkEdgeSection>; // extension perso
     __elkNodesEdgesMap? : Map<string, string[]>; // extension perso
     components : ComponentType[]
-    getLinks: ()=>ComponentLinkType
+    getLinks: ()=>ComponentLinkType[]
 }
 export interface DefaultPluginType{
     data: DefaultDataType

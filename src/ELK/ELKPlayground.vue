@@ -114,6 +114,7 @@ const placementAutoN = ref("5")
 import * as d3 from 'd3';
 import PluginEvent from "../composables/events/PluginEvent";
 import {ElkEdgeSection} from "elkjs";
+import {ELKParams} from "./InternalTypes";
 // @ts-ignore
 window.d3 = d3;
 /*
@@ -127,7 +128,7 @@ d3.select("#root svg").selectAll("g .component").on("click", (evt,data,c) => d3.
 
  */
 
-function getElkUserParams()
+function getElkUserParams() : ELKParams
 {
   return {
     interactive: interactiveCheckbox.value,
