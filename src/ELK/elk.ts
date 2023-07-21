@@ -278,7 +278,7 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
 
 
     async replacementAuto(params,N:number = 5) {
-        function one_layout_distance(orig, candidate): number {
+        function one_layout_distance(orig, candidate) {
 
             const origNodeMap = new Map<string, any>();
             for (const node of orig.children) {
@@ -344,12 +344,17 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
 
             const score = score1 + score2;
 
-            console.log({score:Math.round(score),score1:Math.round(score1),score2:Math.round(score2), orig, candidate})
+            const info = {
+                score:Math.round(score),
+                score1:Math.round(score1),
+                score2:Math.round(score2),
+                orig,
+                candidate};
 
-            return score;
+            return {score,info};
         }
 
-        function layoutsDistance(orig, candidate): number {
+        function layoutsDistance(orig, candidate) {
             // /!\ fonction distance faite uniquement pour l'exemple Github Actions
             let L1 = orig.filter(e=>e.id=='workflow_1')[0];
             let L2 = candidate.filter(e=>e.id=='workflow_1')[0];
@@ -364,11 +369,15 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
         // keep best
         for (let i = 0; i < N; ++i) {
             const candidate = await this.generateLayoutsWithRandomIgnored(params);
-            const score = layoutsDistance(orig, candidate);
+            const {score,info} = layoutsDistance(orig, candidate);
+            let better = false;
             if (score < bestScore) {
+                better = true;
                 bestScore = score;
                 bestLayouts = candidate;
             }
+            if(better)
+            console.log(`${better?'BEST ':''}i=${i} score=${info.score}`,info);
 
         }
 
@@ -458,7 +467,7 @@ WIP : enlever les overlap pour les éléments nouvellement placés en éloignant
             node.raw.drawOption.x += dx*step_size;
             node.raw.drawOption.y += dy*step_size;
         }
-        
+
         for(const ignored_id of Array.from(nodes_ignored))
         {
             const ignored = nodes_map.get(ignored_id);

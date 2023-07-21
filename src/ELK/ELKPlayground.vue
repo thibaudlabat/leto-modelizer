@@ -71,6 +71,7 @@
     <h5 style="margin: 0 0 5px;">Debug</h5>
     <button @click="buttonClick_showELKLayout()">Logger layouts ELK purs</button><br/>
     <a target="_blank" href="https://rtsys.informatik.uni-kiel.de/elklive/json.html">ELKLive json playground</a><br/>
+    <button @click="buttonClick_supprInfoEdges()">Suppr info edges ELK</button><br/>
 
     <hr/>
     <h5 style="margin: 0 0 5px;">Auto node placement</h5>
@@ -111,6 +112,7 @@ const placementAutoN = ref("5")
 // DEBUG
 import * as d3 from 'd3';
 import PluginEvent from "../composables/events/PluginEvent";
+import {ElkEdgeSection} from "elkjs";
 // @ts-ignore
 window.d3 = d3;
 /*
@@ -162,6 +164,14 @@ let layout = new AutoLayout( ()=>props.plugin.plugin );
 async function buttonClick_algoForce()
 {
   await layout.overlapForceAlgo();
+  props.plugin.plugin.draw('root', false);
+}
+
+async function buttonClick_supprInfoEdges()
+{
+  props.plugin.plugin.data.__elkEdges = undefined;
+  props.plugin.plugin.data.__elkNodesEdgesMap = undefined;
+
   props.plugin.plugin.draw('root', false);
 }
 
