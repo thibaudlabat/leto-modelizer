@@ -1,4 +1,4 @@
-import ELK, {ElkEdgeSection, ElkNode} from 'elkjs'
+import ELK, {ElkEdgeSection, ElkExtendedEdge, ElkNode} from 'elkjs'
 import {ComponentType, DefaultPluginType, ComponentLinkType} from "./ExternalTypes";
 import {ELKParams, NodeData, NodeMap} from "./InternalTypes";
 
@@ -258,14 +258,14 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
 
 
     async replacementAuto(params,N:number = 5) {
-        function one_layout_distance(orig, candidate) {
+        function one_layout_distance(orig: ElkNode, candidate: ElkNode) {
 
-            const origNodeMap = new Map<string, ComponentType>();
+            const origNodeMap = new Map<string, ElkNode>();
             for (const node of orig.children) {
                 origNodeMap.set(node.id, node);
             }
 
-            const origEdgeMap = new Map<string, any>();
+            const origEdgeMap = new Map<string, ElkExtendedEdge>();
             for (const edge of orig.edges) {
                 origEdgeMap.set(edge.id, edge);
             }
@@ -334,21 +334,21 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
             return {score,info};
         }
 
-        function layoutsDistance(orig, candidate) {
+        function layoutsDistance(orig:ElkNode[], candidate:ElkNode[]) {
             // /!\ fonction distance faite uniquement pour l'exemple Github Actions
-            let L1 = orig.filter(e=>e.id=='workflow_1')[0];
-            let L2 = candidate.filter(e=>e.id=='workflow_1')[0];
+            let L1:ElkNode = orig.filter(e=>e.id=='workflow_1')[0];
+            let L2 : ElkNode= candidate.filter(e=>e.id=='workflow_1')[0];
             return one_layout_distance(L1,L2);
         }
 
-        const orig = await this.generateLayouts(params,)
+        const orig:ElkNode[] = await this.generateLayouts(params,)
         let bestScore: number = +Infinity; // on veut minimiser
         let bestLayouts = undefined;
 
 
         // keep best
         for (let i = 0; i < N; ++i) {
-            const candidate = await this.generateLayoutsWithRandomIgnored(params);
+            const candidate:ElkNode[] = await this.generateLayoutsWithRandomIgnored(params);
             const {score,info} = layoutsDistance(orig, candidate);
             let better = false;
             if (score < bestScore) {
@@ -487,7 +487,7 @@ WIP : enlever les overlap pour les éléments nouvellement placés en éloignant
 
 
         // détecter les overlap
-        function getOverlapNodes(target, nodes)
+        function getOverlapNodes(target: NodeData, nodes: NodeData[])
         {
             const {x,y,width,height} = target.raw.drawOption;
             const L = [];
@@ -512,7 +512,7 @@ WIP : enlever les overlap pour les éléments nouvellement placés en éloignant
             return L;
         }
 
-        function eloigner(node,from, step_size:number)
+        function eloigner(node:NodeData, from:NodeData, step_size:number)
         {
             const x2 = node.raw.drawOption.x;
             const y2 = node.raw.drawOption.y;
@@ -527,18 +527,18 @@ WIP : enlever les overlap pour les éléments nouvellement placés en éloignant
             node.raw.drawOption.y += dy*step_size;
         }
 
-        function traiter(noeuds, max_depth=3, depth=1)
+        function traiter(noeuds: string[], max_depth=3, depth=1)
         {
-            let noeuds_rencontres = new Set<any>();
+            let noeuds_rencontres = new Set<NodeData>();
 
             for(const ignored_id of noeuds)
             {
-                const ignored = nodes_map.get(ignored_id);
+                const ignored:NodeData = nodes_map.get(ignored_id);
                 // noeud dans lequel faire le rendu
                 const parent = ignored.parent;
 
                 // traitement
-                let overlap;
+                let overlap:NodeData[];
                 do
                 {
                     overlap = getOverlapNodes(ignored,parent.children);
@@ -554,7 +554,7 @@ WIP : enlever les overlap pour les éléments nouvellement placés en éloignant
             }
 
             if(max_depth > depth)
-                    traiter(Array.from(noeuds_rencontres).map(x=>x.raw.id),max_depth,depth+1);
+                traiter(Array.from(noeuds_rencontres).map(x=>x.raw.id),max_depth,depth+1);
 
 
         }
