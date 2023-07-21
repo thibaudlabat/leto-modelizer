@@ -76,6 +76,7 @@
     <h5 style="margin: 0 0 5px;">Auto node placement</h5>
     <label for="direction">iterations</label> <input id="iterations" type="number" v-model="placementAutoN"/><br/>
     <button @click="buttonClick_placementAutoNoeuds()">Replacer automatiquement les noeuds ignorés</button><br/>
+    <button @click="buttonClick_algoForce()">Enlever overlap avec forces</button><br/>
 
   </floating-panel>
 
@@ -157,6 +158,12 @@ function buttonClick_showELKLayout()
 }
 
 let layout = new AutoLayout( ()=>props.plugin.plugin );
+
+async function buttonClick_algoForce()
+{
+  await layout.overlapForceAlgo();
+  props.plugin.plugin.draw('root', false);
+}
 
 
 </script>

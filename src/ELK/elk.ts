@@ -410,4 +410,74 @@ private getParentsByDepth(nodes, ignoreIgnored=false): NodeData[]
         }
         return this.renderedLayouts;
     }
+/*
+WIP : enlever les overlap pour les éléments nouvellement placés en éloignant les autres
+ */
+    async overlapForceAlgo() {
+        const {components, links} = this.getComponentsAndLinks();
+        const {nodes_map,nodes_ignored} = this.getNodes(components);
+
+
+        // détecter les overlap
+        function getOverlapNodes(target, nodes)
+        {
+            const {x,y,width,height} = target.raw.drawOption;
+            const L = [];
+            for(const node of nodes)
+            {
+                if(node===target) // ce même noeud
+                    continue;
+
+                const x2 = node.raw.drawOption.x;
+                const y2 = node.raw.drawOption.y;
+                const w2 = node.raw.drawOption.width;
+                const h2 = node.raw.drawOption.height;
+
+                if( ( (x<=x2 && x2 <= x+width)
+                        || ( x2 <= x && x <= x2+w2) )
+
+                    && ( (y <= y2 && y2 <= y+height)
+                        || (y2 <= y && y <= y2+h2) ) )
+                    L.push(node);
+
+            }
+            return L;
+        }
+
+        function eloigner(node,from, step_size:number)
+        {
+            const x2 = node.raw.drawOption.x;
+            const y2 = node.raw.drawOption.y;
+            const w2 = node.raw.drawOption.width;
+            const h2 = node.raw.drawOption.height;
+
+            const {x,y,width,height} = from.raw.drawOption;
+
+            const dx = (x2+w2/2)-(x+width/2);
+            const dy = (y2+h2/2)-(y+height/2);
+            node.raw.drawOption.x += dx*step_size;
+            node.raw.drawOption.y += dy*step_size;
+        }
+        
+        for(const ignored_id of Array.from(nodes_ignored))
+        {
+            const ignored = nodes_map.get(ignored_id);
+            // noeud dans lequel faire le rendu
+            const parent = ignored.parent;
+
+            // traitement
+            let overlap;
+            do
+            {
+                overlap = getOverlapNodes(ignored,parent.children);
+                const step_size = 0.1;
+                for(const node of overlap)
+                    eloigner(node,ignored, step_size);
+                overlap = getOverlapNodes(ignored,parent.children);
+            }
+            while(overlap.length != 0)
+
+        }
+
+    }
 }
